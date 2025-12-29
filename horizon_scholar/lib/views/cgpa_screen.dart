@@ -16,7 +16,7 @@ class CGPAScreen extends StatelessWidget {
   final CgpaCalcController calcController = Get.find<CgpaCalcController>();
   final ThemeController themeController = Get.find<ThemeController>();
   final AdController adController = Get.find<AdController>();
-
+  
   @override
   Widget build(BuildContext context) {
     final palette = themeController.palette;
@@ -122,9 +122,24 @@ class CGPAScreen extends StatelessWidget {
                         padding: EdgeInsets.zero,
                       ),
                       onPressed: () {
-                        adController.showInterstitial(() {
+                        final sem1Gpa = gpaMap[1];
+                        final sem2Gpa = gpaMap[2];
+                        final sem3Gpa = gpaMap[3];
+                        final sem4Gpa = gpaMap[4];
+                        final sem5Gpa = gpaMap[5];
+
+                        if(sem1Gpa != null && sem2Gpa != null && sem3Gpa !=null && sem4Gpa!=null && sem5Gpa!=null){
+                          adController.showRewarded(() {
+                            Get.to(() => CalculateInternalScreen());
+                          });
+                        }else if (sem1Gpa != null && sem2Gpa != null) {
+                          adController.showInterstitial(() {
+                            Get.to(() => CalculateInternalScreen());
+                          });
+                        }
+                        else {
                           Get.to(() => CalculateInternalScreen());
-                        });
+                        }
                       },
                       child: Container(
                         width: double.infinity,
@@ -161,9 +176,17 @@ class CGPAScreen extends StatelessWidget {
                         padding: EdgeInsets.zero,
                       ),
                       onPressed: () {
-                        adController.showRewarded(() {
+                        final sem1Gpa = gpaMap[1];
+                        final sem2Gpa = gpaMap[2];
+
+                        if (sem1Gpa != null && sem2Gpa != null) {
+                          adController.showRewarded(() {
+                            Get.to(() => PredictCgpaPage());
+                          });
+                        }
+                        else {
                           Get.to(() => PredictCgpaPage());
-                        });
+                        }
                       },
                       child: Container(
                         width: double.infinity,
@@ -200,9 +223,17 @@ class CGPAScreen extends StatelessWidget {
                         padding: EdgeInsets.zero,
                       ),
                       onPressed: () {
-                        adController.showRewarded(() {
+                        final sem1Gpa = gpaMap[1];
+                        final sem2Gpa = gpaMap[2];
+
+                        if (sem1Gpa != null && sem2Gpa != null) {
+                          adController.showRewarded(() {
+                            Get.to(() => VisualizePerformanceScreen());
+                          });
+                        }
+                        else {
                           Get.to(() => VisualizePerformanceScreen());
-                        });
+                        }
                       },
                       child: Container(
                         width: double.infinity,
@@ -330,9 +361,24 @@ class CGPAScreen extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
                   onPressed: () {
-                    adController.showInterstitial(() {
+                    final sem1Gpa = gpaMap[1];
+                    final sem2Gpa = gpaMap[2];
+                    final sem3Gpa = gpaMap[3];
+                    final sem4Gpa = gpaMap[4];
+                    final sem5Gpa = gpaMap[5];
+
+                    if(sem1Gpa != null && sem2Gpa != null && sem3Gpa !=null && sem4Gpa!=null && sem5Gpa!=null){
+                      adController.showRewarded(() {
+                        Get.to(() => CalculateCgpaScreen());
+                      });
+                    }else if (sem1Gpa != null && sem2Gpa != null) {
+                      adController.showInterstitial(() {
+                        Get.to(() => CalculateCgpaScreen());
+                      });
+                    }
+                    else {
                       Get.to(() => CalculateCgpaScreen());
-                    });
+                    }
                   },
                   child: Container(
                     width: double.infinity,

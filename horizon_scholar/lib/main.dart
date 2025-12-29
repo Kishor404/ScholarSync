@@ -38,7 +38,7 @@ void main() async {
   Hive.registerAdapter(InternalMarkModelAdapter());
   Hive.registerAdapter(InternalModelAdapter());
 
-
+  await Hive.openBox('app_meta');
   await Hive.openBox<CgpaModel>('cgpaBox');
   await Hive.openBox<DocumentModel>('documentsBoxV2');
   await Hive.openBox<CourseModel>('courseBox');

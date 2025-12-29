@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/cgpa_controller.dart';
+import '../controllers/home_controller.dart';
 import '../controllers/course_controller.dart';
 import '../controllers/document_controller.dart';
 import '../controllers/theme_controller.dart';
@@ -21,6 +22,9 @@ class HomeScreen extends StatelessWidget {
 
   final CgpaController cgpaController =
       Get.isRegistered<CgpaController>() ? Get.find<CgpaController>() : Get.put(CgpaController());
+
+  final HomeController homeController =
+      Get.isRegistered<HomeController>() ? Get.find<HomeController>() : Get.put(HomeController());
 
   final CourseController courseController =
       Get.isRegistered<CourseController>() ? Get.find<CourseController>() : Get.put(CourseController());
@@ -240,16 +244,27 @@ class HomeScreen extends StatelessWidget {
 
                 // ======== BANNER AD =========
 
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    decoration: BoxDecoration(
-                      color: palette.black.withAlpha(5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const BannerAdWidget(),
-                  ),
-                ),
+                Obx(() {
+                  if (!homeController.shouldShowBanner) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: palette.black.withAlpha(5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const BannerAdWidget(),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+
 
                 const SizedBox(height: 26),
 
