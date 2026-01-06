@@ -602,7 +602,7 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
     final palette = themeController.palette;
 
     // UI values
-    final regs = ['2021', '2025'];
+    final regs = ['2021', '2023'];
     final depts = [
       {'code': 'CB', 'label': 'CSBS'},
       {'code': 'CS', 'label': 'CSE'},

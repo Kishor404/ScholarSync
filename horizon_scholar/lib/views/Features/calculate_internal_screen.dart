@@ -644,17 +644,120 @@ class _CalculateInternalScreenState extends State<CalculateInternalScreen> {
   }
 
   void _showDeptBasedSubjectPicker(BuildContext context, int semester) {
-    final regs = ['2021', '2025'];
+    final palette = themeController.palette;
+
+    // UI values
+    final regs = ['2021', '2023'];
     final depts = [
       {'code': 'CB', 'label': 'CSBS'},
       {'code': 'CS', 'label': 'CSE'},
+      {'code': 'AM', 'label': 'CSE (AIML)'},
+      {'code': 'IT', 'label': 'IT'},
       {'code': 'AD', 'label': 'AIDS'},
+      {'code': 'CE', 'label': 'Civil'},
+      {'code': 'ME', 'label': 'Mech'},
+      {'code': 'EC', 'label': 'ECE'},
+      {'code': 'EE', 'label': 'EEE'},
     ];
 
     final selectedReg = RxnString();
-    final selectedDeptCode = RxnString();
-    final selectedCodes = <String>[].obs;
-    final palette = themeController.palette;
+    final selectedDept = RxnString();
+
+    // Selected subject codes
+    final selectedCodes = <String>{}.obs;
+
+    // Filtered templates
+    final filteredSubjects = <SubjectModel>[].obs;
+
+    /// 🔹 Heavy filter logic (runs ONLY on dropdown change)
+    void updateFiltered() {
+      final reg = selectedReg.value;
+      final dept = selectedDept.value;
+
+      if (reg == null || dept == null) {
+        filteredSubjects.clear();
+        return;
+      }
+
+      final result = calcController.templates.where((s) {
+        return calcController.subjectMatchesMeta(
+          s,
+          regulation: reg,
+          department: dept,
+          semester: semester,
+        );
+      }).toList()
+        ..sort((a, b) => a.code.compareTo(b.code));
+
+      filteredSubjects.assignAll(result);
+    }
+
+    /// 🔹 Section builder
+    Widget section(
+      String title,
+      List<SubjectModel> list,
+    ) {
+      if (list.isEmpty) return const SizedBox();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 12, 6, 6),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: palette.primary,
+              ),
+            ),
+          ),
+          ...list.map((s) {
+            final alreadyAdded = calcController.subjectExists(
+              code: s.code,
+              semester: semester,
+            );
+
+            return Card(
+              color: palette.accent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Obx(() {
+                return CheckboxListTile(
+                  value: selectedCodes.contains(s.code),
+                  onChanged: alreadyAdded
+                      ? null
+                      : (val) {
+                          if (val == true) {
+                            selectedCodes.add(s.code);
+                          } else {
+                            selectedCodes.remove(s.code);
+                          }
+                        },
+                  title: Text(
+                    "${s.code} - ${s.name}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: alreadyAdded
+                          ? palette.black.withAlpha(120)
+                          : palette.black,
+                    ),
+                  ),
+                  subtitle: Text(
+                    alreadyAdded
+                        ? "Already added"
+                        : "${s.credits.toStringAsFixed(1)} credits",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                );
+              }),
+            );
+          }),
+        ],
+      );
+    }
 
     showModalBottomSheet(
       context: context,
@@ -666,7 +769,7 @@ class _CalculateInternalScreenState extends State<CalculateInternalScreen> {
       builder: (ctx) {
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.85,
+          initialChildSize: 0.9,
           minChildSize: 0.6,
           maxChildSize: 0.95,
           builder: (_, scrollController) {
@@ -675,11 +778,15 @@ class _CalculateInternalScreenState extends State<CalculateInternalScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // HEADER
                   Row(
                     children: [
                       const Text(
                         "Choose by Department",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const Spacer(),
                       IconButton(
@@ -689,192 +796,156 @@ class _CalculateInternalScreenState extends State<CalculateInternalScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Dropdowns (wrapped in Obx individually if they depended on other vars, but here they are local)
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: "Regulation",
-                      labelStyle: TextStyle(fontSize: 13),
-                      filled: true,
-                      fillColor: palette.accent,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+
+                  // REGULATION
+                  Obx(() {
+                    return DropdownButtonFormField<String>(
+                      value: selectedReg.value,
+                      decoration: InputDecoration(
+                        labelText: "Regulation",
+                        filled: true,
+                        fillColor: palette.accent,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                    ),
-                    items: regs.map((r) => DropdownMenuItem(value: r, child: Text("Reg $r"))).toList(),
-                    onChanged: (val) {
-                      selectedReg.value = val;
-                      selectedCodes.clear();
-                    },
-                  ),
+                      items: regs
+                          .map((r) => DropdownMenuItem(
+                                value: r,
+                                child: Text("Reg $r"),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        selectedReg.value = val;
+                        selectedCodes.clear();
+                        updateFiltered();
+                      },
+                    );
+                  }),
                   const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: "Department",
-                      labelStyle: TextStyle(fontSize: 13),
-                      filled: true,
-                      fillColor: palette.accent,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+
+                  // DEPARTMENT
+                  Obx(() {
+                    return DropdownButtonFormField<String>(
+                      value: selectedDept.value,
+                      decoration: InputDecoration(
+                        labelText: "Department",
+                        filled: true,
+                        fillColor: palette.accent,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                    ),
-                    items: depts.map((d) => DropdownMenuItem(value: d['code'] as String, child: Text(d['label']!))).toList(),
-                    onChanged: (val) {
-                      selectedDeptCode.value = val;
-                      selectedCodes.clear();
-                    },
-                  ),
+                      items: depts
+                          .map((d) => DropdownMenuItem(
+                                value: d['code'],
+                                child: Text(d['label']!),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        selectedDept.value = val;
+                        selectedCodes.clear();
+                        updateFiltered();
+                      },
+                    );
+                  }),
                   const SizedBox(height: 12),
 
+                  // SUBJECT LIST
                   Expanded(
                     child: Obx(() {
-                      final reg = selectedReg.value;
-                      final deptCode = selectedDeptCode.value;
-                      // Just listening for changes
-                      // ignore: unused_local_variable
-                      final codesTrigger = selectedCodes.length; 
-
-                      if (reg == null || deptCode == null) {
+                      if (selectedReg.value == null ||
+                          selectedDept.value == null) {
                         return Center(
                           child: Text(
-                            "Select regulation and department to view subjects",
+                            "Select regulation and department\nfor Semester $semester",
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: palette.black),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: palette.black,
+                            ),
                           ),
                         );
                       }
 
-                      // OPTIMIZATION: This filtering can be heavy.
-                      // Ideally, templates map should be indexed. 
-                      // Since we can't change controller, we compute here but only when dropdowns change.
-                      final templates = calcController.templates;
-                      final filtered = templates.where((s) {
-                        return calcController.subjectMatchesMeta(
-                          s,
-                          regulation: reg,
-                          department: deptCode,
-                          semester: semester,
-                        );
-                      }).toList()..sort((a, b) => a.code.compareTo(b.code));
-
-                      if (filtered.isEmpty) {
+                      if (filteredSubjects.isEmpty) {
                         return Center(
                           child: Text(
                             "No subjects mapped for this combination.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: palette.black),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: palette.black,
+                            ),
                           ),
                         );
                       }
 
-                      return ListView.builder(
+                      final grouped =
+                          calcController.groupByCategory(filteredSubjects);
+
+                      return ListView(
                         controller: scrollController,
-                        itemCount: filtered.length,
-                        itemBuilder: (_, index) {
-                          final subject = filtered[index];
-                          final code = subject.code;
-                          
-                          // Use Obx only if checking logic is complex, 
-                          // but here we are inside a parent Obx, so it's fine.
-                          final isSelected = selectedCodes.contains(code);
-                          final alreadyAdded = calcController.subjectExists(
-                            code: subject.code,
-                            semester: semester,
-                          );
-
-
-                          return Card(
-                            color: palette.accent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: CheckboxListTile(
-                              value: isSelected,
-                              onChanged: alreadyAdded
-                                  ? null
-                                  : (val) {
-                                      if (val == true) {
-                                        selectedCodes.add(code);
-                                      } else {
-                                        selectedCodes.remove(code);
-                                      }
-                                    },
-                              title: Text(
-                                "${subject.code} - ${subject.name}",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: alreadyAdded
-                                      ? palette.black.withAlpha(120)
-                                      : palette.black,
-                                ),
-                              ),
-                              subtitle: Text(
-                                alreadyAdded
-                                    ? "Already added"
-                                    : "${subject.credits.toStringAsFixed(1)} credits",
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            )
-
-                          );
-                        },
+                        children: [
+                          section("Subjects", grouped['core'] ?? []),
+                          section("Professional Electives", grouped['pe'] ?? []),
+                          section("Open Electives", grouped['oe'] ?? []),
+                        ],
                       );
                     }),
                   ),
+
                   const SizedBox(height: 8),
+
+                  // ADD BUTTON
                   Obx(() {
-                    final hasSelection = selectedCodes.isNotEmpty;
+                    final enabled = selectedCodes.isNotEmpty;
                     return SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: hasSelection ? palette.primary : palette.black.withAlpha(150),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                          backgroundColor: enabled
+                              ? palette.primary
+                              : palette.black.withAlpha(150),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        onPressed: hasSelection
+                        onPressed: enabled
                             ? () async {
-                                final reg = selectedReg.value;
-                                final deptCode = selectedDeptCode.value;
-                                if (reg == null || deptCode == null) return;
+                                final toAdd = filteredSubjects
+                                    .where((s) =>
+                                        selectedCodes.contains(s.code))
+                                    .toList();
 
-                                // Show a loader dialog here if adding takes time
-                                showDialog(
-                                  context: context, 
-                                  barrierDismissible: false,
-                                  builder: (_) => const Center(child: CircularProgressIndicator())
-                                );
+                                Navigator.of(ctx).pop();
 
-                                final templates = calcController.templates;
-                                final toAdd = templates.where((s) {
-                                  if (!selectedCodes.contains(s.code)) return false;
-                                  return calcController.subjectMatchesMeta(
+                                for (final s in toAdd) {
+                                  await calcController.addSubjectFromTemplate(
                                     s,
-                                    regulation: reg,
-                                    department: deptCode,
-                                    semester: semester,
+                                    semester,
                                   );
-                                }).toList();
-
-                                for (final t in toAdd) {
-                                  await calcController.addSubjectFromTemplate(t, semester);
                                 }
+
                                 await calcController.recalculateAll();
-                                
-                                if(context.mounted) {
-                                  Navigator.of(context).pop(); // pop loader
-                                  Navigator.of(ctx).pop(); // pop sheet
+
+                                if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Added ${toAdd.length} subject(s)")),
+                                    SnackBar(
+                                      content: Text(
+                                        "Added ${toAdd.length} subject(s) to Sem $semester",
+                                      ),
+                                    ),
                                   );
                                 }
                               }
                             : null,
                         child: Text(
-                          hasSelection ? "Add selected subjects" : "Select subjects to add",
+                          enabled
+                              ? "Add selected subjects"
+                              : "Select subjects to add",
                           style: TextStyle(color: palette.accent),
                         ),
                       ),
