@@ -11,7 +11,7 @@ import '../controllers/theme_controller.dart';
 // import '../screens/course_screen.dart';
 // import '../screens/vault_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends GetView<HomeController> {
   HomeScreen({super.key, this.onNavigate});
 
   final void Function(int)? onNavigate;
@@ -20,17 +20,10 @@ class HomeScreen extends StatelessWidget {
 
   final ThemeController themeController = Get.find<ThemeController>();
 
-  final CgpaController cgpaController =
-      Get.isRegistered<CgpaController>() ? Get.find<CgpaController>() : Get.put(CgpaController());
-
-  final HomeController homeController =
-      Get.isRegistered<HomeController>() ? Get.find<HomeController>() : Get.put(HomeController());
-
-  final CourseController courseController =
-      Get.isRegistered<CourseController>() ? Get.find<CourseController>() : Get.put(CourseController());
-
-  final DocumentController documentController =
-      Get.isRegistered<DocumentController>() ? Get.find<DocumentController>() : Get.put(DocumentController());
+  final HomeController homeController = Get.find();
+  final CgpaController cgpaController = Get.find();
+  final CourseController courseController = Get.find();
+  final DocumentController documentController = Get.find();
 
   @override
   Widget build(BuildContext context) {

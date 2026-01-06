@@ -44,6 +44,7 @@ dependencies:
   collection: ^1.19.1
   fl_chart: ^0.63.0
   file_picker: ^8.0.0
+  audioplayers: ^6.5.1
 
 
 dev_dependencies:
@@ -76,6 +77,9 @@ flutter:
     - assets/professional_electives.csv
     - assets/open_electives.csv
     - assets/logo.png
+    - assets/HorizonCodeLab/Logo/HorizonLogoColored.png
+    - assets/HorizonCodeLab/Logo/HorizonLogo.png
+    - assets/HorizonCodeLab/Audio/BGM.mp3
 
   fonts:
     - family: Poppins

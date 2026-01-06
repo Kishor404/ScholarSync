@@ -8,54 +8,61 @@ class SplashScreen extends GetView<SplashController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F1F1),
+      backgroundColor: Colors.white,
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // App Logo
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 20,
-                    color: Colors.black.withOpacity(0.08),
-                  ),
-                ],
+        child: AnimatedBuilder(
+          animation: controller.animationController,
+          builder: (context, _) {
+            return Opacity(
+              opacity: controller.fadeAnimation.value,
+              child: Transform.translate(
+                offset: Offset(0, controller.slideAnimation.value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo
+                    Transform.scale(
+                      scale: controller.scaleAnimation.value,
+                      child: Container(
+                        
+                        child: Image.asset(
+                          'assets/HorizonCodeLab/Logo/HorizonLogoColored.png',
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Product of text
+                    const Text(
+                      "PRESENT",
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.6,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8A8A8A),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    const Text(
+                      "HORIZON SCHOLAR",
+                      style: TextStyle(
+                        fontSize: 14,
+                        letterSpacing: 2.0,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              padding: const EdgeInsets.all(14),
-              child: Image.asset(
-                'assets/logo.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-
-
-            const SizedBox(height: 20),
-
-            // App Name
-            Text(
-              "Horizon Scholar",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            Text(
-              "Track • Analyze • Excel",
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.black54,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
