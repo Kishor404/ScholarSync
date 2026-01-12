@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/theme_controller.dart';
@@ -16,7 +18,8 @@ class _MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late ThemeController themeController;
-
+  DateTime? _lastBackPress;
+  bool _showExitWarning = false;
   late final pages = [
     HomeScreen(onNavigate: _changeTab),
     CGPAScreen(),
@@ -37,24 +40,80 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
+  void _handleBackPress(double s) {
+    if (_selectedIndex != 0) {
+      setState(() => _selectedIndex = 0);
+      return;
+    }
+
+    final now = DateTime.now();
+    if (_lastBackPress == null || now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+      _lastBackPress = now;
+      HapticFeedback.lightImpact();
+
+      // Show our custom internal "snackbar"
+      setState(() => _showExitWarning = true);
+
+      // Hide it after 2 seconds
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _showExitWarning = false);
+      });
+      return;
+    }
+    SystemNavigator.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      // Only update palette reference, don't rebuild entire widget
-      final palette = themeController.palette;
+    final w = MediaQuery.of(context).size.width;
+    final s = w / 460;
+    final palette = themeController.palette;
 
-      return Scaffold(
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: pages,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBackPress(s);
+      },
+      child: Scaffold(
+        // The Stack allows us to put the warning behind the UI
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _selectedIndex,
+              children: pages,
+            ),
+            
+            // Custom Exit Warning "Snackbar"
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              bottom: _showExitWarning ? 10 * s : -50 * s, // Slides "under" the nav bar
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 10 * s),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "Press back again to exit",
+                    style: TextStyle(color: Colors.white, fontSize: 11 * s),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         bottomNavigationBar: _OptimizedNavBar(
           selectedIndex: _selectedIndex,
           onTap: _changeTab,
           palette: palette,
         ),
-      );
-    });
+      ),
+    );
   }
 }
 

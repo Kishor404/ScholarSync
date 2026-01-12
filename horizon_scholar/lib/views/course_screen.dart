@@ -491,6 +491,7 @@ class CourseScreen extends StatelessWidget {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final certPathController = TextEditingController();
+    final projectLinkController = TextEditingController();
     final isCompleted = false.obs;
     final selectedFileName = ''.obs;
     final selectedCategories = <String>[].obs;
@@ -594,7 +595,7 @@ class CourseScreen extends StatelessWidget {
                               color: palette.black.withAlpha(160),
                             ),
                           ),
-                          SizedBox(width: 10 * s),
+                          SizedBox(width: 22 * s),
                           Expanded(
                             child: TextField(
                               controller: descController,
@@ -612,6 +613,28 @@ class CourseScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    SizedBox(height: 12 * s),
+
+                    TextField(
+                      controller: projectLinkController,
+                      keyboardType: TextInputType.url,
+                      style: TextStyle(fontSize: 14 * s),
+                      decoration: InputDecoration(
+                        labelText: "Project link (optional)",
+                        hintText: "https://github.com/your-project",
+                        labelStyle: TextStyle(fontSize: 14 * s),
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        prefixIcon: Icon(Icons.link, size: 22 * s),
+                        filled: true,
+                        fillColor: palette.black.withAlpha(10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
 
                     SizedBox(height: 15 * s),
 
@@ -793,6 +816,7 @@ class CourseScreen extends StatelessWidget {
                               certificationPath: certPathController.text.trim(),
                               courseDescription: descController.text.trim(),
                               categories: selectedCategories.toList(),
+                              projectLink: projectLinkController.text.trim(),
                             );
 
                             courseController.addCourse(course);
@@ -906,6 +930,7 @@ Future<void> _downloadCertificate(
         TextEditingController(text: course.courseDescription);
     final certPathController =
         TextEditingController(text: course.certificationPath);
+    final projectLinkController = TextEditingController(text: course.projectLink);
     final isCompleted = course.isCompleted.obs;
     final selectedCategories = (course.categories).toList().obs;
 
@@ -994,6 +1019,7 @@ Future<void> _downloadCertificate(
                         ),
                       ),
                     ),
+
                     SizedBox(height: 10 * s),
 
                     // Description
@@ -1014,7 +1040,7 @@ Future<void> _downloadCertificate(
                               color: palette.black.withAlpha(160),
                             ),
                           ),
-                          SizedBox(width: 10 * s),
+                          SizedBox(width: 22 * s),
                           Expanded(
                             child: TextField(
                               controller: descController,
@@ -1032,6 +1058,30 @@ Future<void> _downloadCertificate(
                         ],
                       ),
                     ),
+
+                    SizedBox(height: 12 * s),
+
+                    TextField(
+                      controller: projectLinkController,
+                      keyboardType: TextInputType.url,
+                      style: TextStyle(fontSize: 14 * s),
+                      decoration: InputDecoration(
+                        labelText: "Project link (optional)",
+                        hintText: "https://github.com/your-project",
+                        labelStyle: TextStyle(fontSize: 14 * s),
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        prefixIcon: Icon(Icons.link, size: 22 * s),
+                        filled: true,
+                        fillColor: palette.black.withAlpha(10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    
+
 
                     SizedBox(height: 15 * s),
 
@@ -1344,6 +1394,7 @@ Future<void> _downloadCertificate(
                                   courseDescription:
                                       descController.text.trim(),
                                   categories: selectedCategories.toList(),
+                                  projectLink: projectLinkController.text.trim(),
                                 );
 
                                 courseController.updateCourse(

@@ -18,11 +18,16 @@ class CourseModel {
   @HiveField(4)
   List<String> categories;
 
+  @HiveField(5)
+  String projectLink;
+
   CourseModel({
     required this.courseName,
     required this.isCompleted,
     required this.certificationPath,
     required this.courseDescription,
     List<String>? categories,
-  }) : categories = categories ?? [];
+    String? projectLink,
+  }) : categories = categories ?? [],
+      projectLink = projectLink ?? '';
 }
