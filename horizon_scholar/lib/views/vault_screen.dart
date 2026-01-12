@@ -105,7 +105,7 @@ class VaultScreen extends StatelessWidget {
             fontSize: isMobile ? 22 * s : 26 * s,
             color: palette.minimal,
             fontFamily: 'Righteous',
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         SizedBox(height: 4 * s),
@@ -172,47 +172,78 @@ class VaultScreen extends StatelessWidget {
   }
 
   // ============== DOWNLOAD DOCUMENT ==============
-  Future<void> _downloadDocument(
-    BuildContext context,
-    DocumentModel doc,
-  ) async {
-    try {
-      if (doc.path.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No document to download")),
-        );
-        return;
-      }
-
-      final file = File(doc.path);
-      if (!file.existsSync()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("File not found")),
-        );
-        return;
-      }
-
-      final bytes = await file.readAsBytes();
-      final fileName = p.basename(doc.path);
-
-      // SYSTEM SAVE-AS DIALOG
-      final savePath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Download document',
-        fileName: fileName,
-        bytes: bytes,
-      );
-
-      if (savePath == null) return;
-
+Future<void> _downloadDocument(
+  BuildContext context,
+  DocumentModel doc,
+) async {
+  try {
+    if (doc.path.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Document downloaded successfully")),
+        const SnackBar(content: Text("No document to download")),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Download failed: $e")),
-      );
+      return;
     }
+
+    final file = File(doc.path);
+    if (!file.existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("File not found")),
+      );
+      return;
+    }
+
+    final bytes = await file.readAsBytes();
+    var fileName = p.basename(doc.path);
+
+    // ✅ FIX: Get unique filename BEFORE saving
+    fileName = _getUniqueFileName(fileName);
+
+    // SYSTEM SAVE-AS DIALOG
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Download document',
+      fileName: fileName,  // ✅ Now uses Test(1).png instead of Test.png (1)
+      bytes: bytes,
+    );
+
+    if (savePath == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Document downloaded successfully")),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download failed: $e")),
+    );
   }
+}
+
+// ============== GET UNIQUE FILENAME ==============
+String _getUniqueFileName(String fileName) {
+  // Split filename into name and extension
+  final lastDotIndex = fileName.lastIndexOf('.');
+  final name = lastDotIndex > 0 
+    ? fileName.substring(0, lastDotIndex) 
+    : fileName;
+  final ext = lastDotIndex > 0 
+    ? fileName.substring(lastDotIndex) 
+    : '';
+
+  // Get Downloads directory
+  final saveDir = Directory('/storage/emulated/0/Download');
+  
+  // File doesn't exist, return as is
+  if (!File('${saveDir.path}/$fileName').existsSync()) {
+    return fileName;
+  }
+
+  // File exists, find unique name: name(1).ext, name(2).ext, etc.
+  int counter = 1;
+  while (File('${saveDir.path}/$name($counter)$ext').existsSync()) {
+    counter++;
+  }
+  
+  return '$name($counter)$ext';
+}
 
   // ============== OPEN DOCUMENT ==============
   Future<void> _openDocument(DocumentModel doc) async {

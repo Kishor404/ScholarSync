@@ -110,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
         fontSize: isMobile ? 22 * s : 26 * s,
         color: palette.black,
         fontFamily: 'Righteous',
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -333,105 +333,116 @@ class SettingsScreen extends StatelessWidget {
 
   // ============== ABOUT BOTTOM SHEET ==============
   void _showAboutBottomSheet(
-      BuildContext context, AppPalette palette, double s, bool isMobile) {
+    BuildContext context, AppPalette palette, double s, bool isMobile) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // ⭐ IMPORTANT
       backgroundColor: palette.accent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (_) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(20 * s, 18 * s, 20 * s, 24 * s),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag indicator
-              Center(
-                child: Container(
-                  width: 42 * s,
-                  height: 4 * s,
-                  margin: EdgeInsets.only(bottom: 14 * s),
-                  decoration: BoxDecoration(
-                    color: palette.black.withAlpha(150),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
-              // App header
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(6 * s),
+        return SafeArea(
+          top: false, // allow rounded corners at top
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20 * s,
+              18 * s,
+              20 * s,
+              (24 * s) + bottomPadding, // ⭐ prevents overlap
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag indicator
+                Center(
+                  child: Container(
+                    width: 42 * s,
+                    height: 4 * s,
+                    margin: EdgeInsets.only(bottom: 14 * s),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: palette.primary.withAlpha(50),
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        width: 48 * s,
-                        height: 48 * s,
-                        fit: BoxFit.contain,
-                      ),
+                      color: palette.black.withAlpha(150),
+                      borderRadius: BorderRadius.circular(999),
                     ),
                   ),
-                  SizedBox(width: 12 * s),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Horizon Scholar",
-                          style: TextStyle(
-                            fontSize: isMobile ? 15 * s : 16 * s,
-                            fontWeight: FontWeight.w600,
-                          ),
+                ),
+
+                // App header
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(6 * s),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: palette.primary.withAlpha(50),
+                          width: 1,
                         ),
-                        Text(
-                          "Your academic companion for CGPA, courses and documents.",
-                          style: TextStyle(
-                            fontSize: isMobile ? 10 * s : 11 * s,
-                            color: palette.black.withAlpha(150),
-                          ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          width: 48 * s,
+                          height: 48 * s,
+                          fit: BoxFit.contain,
                         ),
-                      ],
+                      ),
                     ),
+                    SizedBox(width: 12 * s),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Horizon Scholar",
+                            style: TextStyle(
+                              fontSize: isMobile ? 15 * s : 16 * s,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            "Your academic companion for CGPA, courses and documents.",
+                            style: TextStyle(
+                              fontSize: isMobile ? 10 * s : 11 * s,
+                              color: palette.black.withAlpha(150),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 16 * s),
+
+                Text(
+                  "Built by Horizon Code Lab",
+                  style: TextStyle(
+                    fontSize: isMobile ? 11 * s : 12 * s,
+                    fontWeight: FontWeight.w500,
+                    color: palette.black,
                   ),
-                ],
-              ),
-
-              SizedBox(height: 16 * s),
-
-              Text(
-                "Built by Horizon Code Lab",
-                style: TextStyle(
-                  fontSize: isMobile ? 11 * s : 12 * s,
-                  fontWeight: FontWeight.w500,
-                  color: palette.black,
                 ),
-              ),
-              SizedBox(height: 4 * s),
-              Text(
-                "This app helps you track semesters, organize course info and keep important documents safe in one place.",
-                style: TextStyle(
-                  fontSize: isMobile ? 10 * s : 11 * s,
-                  color: palette.black.withAlpha(150),
+                SizedBox(height: 4 * s),
+                Text(
+                  "This app helps you track semesters, organize course info and keep important documents safe in one place.",
+                  style: TextStyle(
+                    fontSize: isMobile ? 10 * s : 11 * s,
+                    color: palette.black.withAlpha(150),
+                  ),
                 ),
-              ),
-              SizedBox(height: 14 * s),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
+
 
   // ============== HELPERS ==============
   BoxDecoration _cardDecoration(AppPalette palette) {

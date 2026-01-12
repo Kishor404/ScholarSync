@@ -16,6 +16,7 @@ import 'models/subject_model.dart';
 import 'models/gpa_model.dart';
 
 import 'controllers/cgpa_calc_controller.dart';
+import 'controllers/user_pref_controller.dart';
 import 'controllers/theme_controller.dart';
 //import 'controllers/ad_controller.dart';
 
@@ -54,7 +55,8 @@ void main() async {
   Get.put(CgpaCalcController(), permanent: true);
   Get.put(InternalCalcController(), permanent: true);
   Get.put(ThemeController(settingsBox), permanent: true);
-  
+  Get.put(UserPrefController(), permanent: true);
+
   runApp(MyApp());
 }
 

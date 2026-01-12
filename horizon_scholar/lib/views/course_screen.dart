@@ -99,7 +99,7 @@ class CourseScreen extends StatelessWidget {
             fontSize: isMobile ? 22 * s : 26 * s,
             color: palette.minimal,
             fontFamily: 'Righteous',
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         SizedBox(height: 4 * s),
@@ -825,51 +825,75 @@ class CourseScreen extends StatelessWidget {
   }
 
   // ================= DOWNLOAD COURSE CERTIFICATE ==================
-  Future<void> _downloadCertificate(
-    BuildContext context,
-    String sourcePath,
-  ) async {
-    try {
-      if (sourcePath.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No certificate available")),
-        );
-        return;
-      }
+  String getUniqueFileName(String fileName) {
+  // Split filename into name and extension
+  final lastDotIndex = fileName.lastIndexOf('.');
+  final name = lastDotIndex > 0 
+    ? fileName.substring(0, lastDotIndex) 
+    : fileName;
+  final ext = lastDotIndex > 0 
+    ? fileName.substring(lastDotIndex) 
+    : '';
 
-      final sourceFile = File(sourcePath);
-      if (!sourceFile.existsSync()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Certificate file not found")),
-        );
-        return;
-      }
-
-      final fileName = p.basename(sourcePath);
-
-      // READ FILE AS BYTES
-      final bytes = await sourceFile.readAsBytes();
-
-      // SYSTEM SAVE DIALOG
-      final savePath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Download certificate',
-        fileName: fileName,
-        bytes: bytes,
-      );
-
-      if (savePath == null) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Certificate downloaded successfully"),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Download failed: $e")),
-      );
-    }
+  // File doesn't exist, return as is
+  final saveDir = Directory('/storage/emulated/0/Download'); // or your default path
+  if (!File('${saveDir.path}/$fileName').existsSync()) {
+    return fileName;
   }
+
+  // File exists, find unique name
+  int counter = 1;
+  while (File('${saveDir.path}/$name($counter)$ext').existsSync()) {
+    counter++;
+  }
+  
+  return '$name($counter)$ext';
+}
+
+Future<void> _downloadCertificate(
+  BuildContext context,
+  String sourcePath,
+) async {
+  try {
+    if (sourcePath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No certificate available')),
+      );
+      return;
+    }
+
+    final sourceFile = File(sourcePath);
+    if (!sourceFile.existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Certificate file not found')),
+      );
+      return;
+    }
+
+    var fileName = p.basename(sourcePath);
+    // ✅ FIX: Get unique filename BEFORE saving
+    fileName = getUniqueFileName(fileName);
+    
+    final bytes = await sourceFile.readAsBytes();
+
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Download certificate',
+      fileName: fileName,  // ✅ Now uses Test(1).png instead of Test.png (1)
+      bytes: bytes,
+    );
+
+    if (savePath == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Certificate downloaded successfully')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Download failed: $e')),
+    );
+  }
+}
+
 
   // ================== EDIT COURSE DIALOG ==================
   void _showEditCourseDialog(

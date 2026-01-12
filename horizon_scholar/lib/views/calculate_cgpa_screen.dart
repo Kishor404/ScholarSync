@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../controllers/cgpa_calc_controller.dart';
 import '../models/subject_model.dart';
 import '../../controllers/theme_controller.dart';
+import '../../controllers/user_pref_controller.dart';
 
 class CalculateCgpaScreen extends StatefulWidget {
   const CalculateCgpaScreen({super.key});
@@ -56,7 +57,7 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
             fontSize: isMobile ? 20 * s : 24 * s,
             color: palette.black,
             fontFamily: 'Righteous',
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         centerTitle: false,
@@ -414,6 +415,23 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
     );
   }
 
+  Widget bottomSheetSafeWrapper({
+    required BuildContext context,
+    required Widget child,
+    required double s,
+  }) {
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset + (12 * s)),
+        child: child,
+      ),
+    );
+  }
+
+
   // ============== DELETE CONFIRMATION ==============
   void _showDeleteConfirmation(
     BuildContext context,
@@ -528,168 +546,172 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
-          builder: (_, scrollController) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(20 * s, 16 * s, 20 * s, 20 * s),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Text(
-                        "Choose Subject",
-                        style: TextStyle(
-                          fontSize: 16 * s,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8 * s),
-
-                  // Search box
-                  TextField(
-                    onChanged: (val) {
-                      final query = val.toLowerCase();
-                      if (query.isEmpty) {
-                        filteredSubjects.assignAll(allTemplates);
-                      } else {
-                        final results = allTemplates.where((s) {
-                          final code = s.code.toLowerCase();
-                          final name = s.name.toLowerCase();
-                          return code.contains(query) || name.contains(query);
-                        }).toList();
-                        filteredSubjects.assignAll(results);
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Search by code or name",
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: palette.accent,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12 * s),
-
-                  // List of subjects
-                  Expanded(
-                    child: Obx(() {
-                      if (filteredSubjects.isEmpty) {
-                        return Center(
-                          child: Text(
-                            "No subjects found.\nTap 'Add new subject manually' instead.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13 * s,
-                              color: palette.black,
-                            ),
+        return bottomSheetSafeWrapper(
+          context: ctx,
+          s: s,
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.75,
+            minChildSize: 0.5,
+            maxChildSize: 0.9,
+            builder: (_, scrollController) {
+              return Padding(
+                padding: EdgeInsets.fromLTRB(20 * s, 16 * s, 20 * s, 20 * s),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Text(
+                          "Choose Subject",
+                          style: TextStyle(
+                            fontSize: 16 * s,
+                            fontWeight: FontWeight.w700,
                           ),
-                        );
-                      }
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8 * s),
 
-                      return ListView.builder(
-                        controller: scrollController,
-                        itemCount: filteredSubjects.length,
-                        itemBuilder: (_, index) {
-                          final subject = filteredSubjects[index];
-                          final alreadyAdded = calcController.subjectExists(
-                            code: subject.code,
-                            semester: semester,
-                          );
-
-                          final displayCode =
-                              subject.code.isEmpty ? "No Code" : subject.code;
-
-                          return Card(
-                            color: palette.accent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListTile(
-                              enabled: !alreadyAdded,
-                              title: Text(
-                                "$displayCode - ${subject.name}",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13 * s,
-                                  color: alreadyAdded
-                                      ? palette.black.withAlpha(120)
-                                      : palette.black,
-                                ),
-                              ),
-                              subtitle: Text(
-                                alreadyAdded
-                                    ? "Already added to this semester"
-                                    : "${subject.credits.toStringAsFixed(1)} credits",
-                                style: TextStyle(fontSize: 12 * s),
-                              ),
-                              trailing: alreadyAdded
-                                  ? const Icon(Icons.check_circle,
-                                      color: Colors.green)
-                                  : null,
-                              onTap: alreadyAdded
-                                  ? null
-                                  : () async {
-                                      await calcController
-                                          .addSubjectFromTemplate(
-                                        subject,
-                                        semester,
-                                      );
-                                      await calcController.recalculateAll();
-                                      if (context.mounted) {
-                                        Navigator.of(ctx).pop();
-                                      }
-                                    },
-                            ),
-                          );
-                        },
-                      );
-                    }),
-                  ),
-
-                  SizedBox(height: 8 * s),
-
-                  // Add new button at bottom
-                  Align(
-                    alignment: Alignment.center,
-                    child: TextButton.icon(
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        _showAddSubjectDialog(context, semester);
+                    // Search box
+                    TextField(
+                      onChanged: (val) {
+                        final query = val.toLowerCase();
+                        if (query.isEmpty) {
+                          filteredSubjects.assignAll(allTemplates);
+                        } else {
+                          final results = allTemplates.where((s) {
+                            final code = s.code.toLowerCase();
+                            final name = s.name.toLowerCase();
+                            return code.contains(query) || name.contains(query);
+                          }).toList();
+                          filteredSubjects.assignAll(results);
+                        }
                       },
-                      icon: Icon(
-                        Icons.add,
-                        size: 18 * s,
-                        color: palette.primary,
-                      ),
-                      label: Text(
-                        "Can't find your subject? Add manually",
-                        style: TextStyle(
-                          color: palette.primary,
-                          fontSize: 12 * s,
+                      decoration: InputDecoration(
+                        hintText: "Search by code or name",
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: palette.accent,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                    SizedBox(height: 12 * s),
+
+                    // List of subjects
+                    Expanded(
+                      child: Obx(() {
+                        if (filteredSubjects.isEmpty) {
+                          return Center(
+                            child: Text(
+                              "No subjects found.\nTap 'Add new subject manually' instead.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13 * s,
+                                color: palette.black,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: filteredSubjects.length,
+                          itemBuilder: (_, index) {
+                            final subject = filteredSubjects[index];
+                            final alreadyAdded = calcController.subjectExists(
+                              code: subject.code,
+                              semester: semester,
+                            );
+
+                            final displayCode =
+                                subject.code.isEmpty ? "No Code" : subject.code;
+
+                            return Card(
+                              color: palette.accent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                enabled: !alreadyAdded,
+                                title: Text(
+                                  "$displayCode - ${subject.name}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13 * s,
+                                    color: alreadyAdded
+                                        ? palette.black.withAlpha(120)
+                                        : palette.black,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  alreadyAdded
+                                      ? "Already added to this semester"
+                                      : "${subject.credits.toStringAsFixed(1)} credits",
+                                  style: TextStyle(fontSize: 12 * s),
+                                ),
+                                trailing: alreadyAdded
+                                    ? const Icon(Icons.check_circle,
+                                        color: Colors.green)
+                                    : null,
+                                onTap: alreadyAdded
+                                    ? null
+                                    : () async {
+                                        await calcController
+                                            .addSubjectFromTemplate(
+                                          subject,
+                                          semester,
+                                        );
+                                        await calcController.recalculateAll();
+                                        if (context.mounted) {
+                                          Navigator.of(ctx).pop();
+                                        }
+                                      },
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ),
+
+                    SizedBox(height: 8 * s),
+
+                    // Add new button at bottom
+                    Align(
+                      alignment: Alignment.center,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          _showAddSubjectDialog(context, semester);
+                        },
+                        icon: Icon(
+                          Icons.add,
+                          size: 18 * s,
+                          color: palette.primary,
+                        ),
+                        label: Text(
+                          "Can't find your subject? Add manually",
+                          style: TextStyle(
+                            color: palette.primary,
+                            fontSize: 12 * s,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
         );
       },
     );
@@ -711,27 +733,27 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
       siz = screenWidth / 800;
     }
 
-    final regs = ['2021', '2023'];
+    final regs = ['2021', '2025'];
     final depts = [
-      {'code': 'CB', 'label': 'CSBS'},
-      {'code': 'CS', 'label': 'CSE'},
-      {'code': 'AM', 'label': 'CSE (AIML)'},
-      {'code': 'IT', 'label': 'IT'},
-      {'code': 'AD', 'label': 'AIDS'},
+      {'code': 'CB', 'label': 'CSBS - Computer Science and Business Systems'},
+      {'code': 'AD', 'label': 'AIDS - Artificial Intelligence And Data Science'},
       {'code': 'CE', 'label': 'Civil'},
-      {'code': 'ME', 'label': 'Mech'},
-      {'code': 'EC', 'label': 'ECE'},
-      {'code': 'EE', 'label': 'EEE'},
+      {'code': 'CS', 'label': 'CSE - Computer Science and Engineering'},
+      {'code': 'AM', 'label': 'CSE (AIML) - Computer Science and Engineering (AIML)'},
+      {'code': 'EC', 'label': 'ECE - Electronics and Communication Engineering'},
+      {'code': 'EE', 'label': 'EEE - Electrical and Electronics Engineering'},
+      {'code': 'IT', 'label': 'IT - Information Technology'},
+      {'code': 'ME', 'label': 'Mechanical'},
     ];
 
-    final selectedReg = RxnString();
-    final selectedDept = RxnString();
+    final UserPrefController prefCtrl = Get.find<UserPrefController>();
     final selectedCodes = <String>{}.obs;
     final filteredSubjects = <SubjectModel>[].obs;
 
     void updateFiltered() {
-      final reg = selectedReg.value;
-      final dept = selectedDept.value;
+      final reg = prefCtrl.selectedReg.value;
+      final dept = prefCtrl.selectedDept.value;
+
 
       if (reg == null || dept == null) {
         filteredSubjects.clear();
@@ -813,7 +835,7 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
         ],
       );
     }
-
+    updateFiltered();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -822,205 +844,216 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.9,
-          minChildSize: 0.6,
-          maxChildSize: 0.95,
-          builder: (_, scrollController) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(20 * siz, 16 * siz, 20 * siz, 20 * siz),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // HEADER
-                  Row(
-                    children: [
-                      Text(
-                        "Choose by Department",
-                        style: TextStyle(
-                          fontSize: 16 * siz,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12 * siz),
-
-                  // REGULATION
-                  Obx(() {
-                    return DropdownButtonFormField<String>(
-                      value: selectedReg.value,
-                      decoration: InputDecoration(
-                        labelText: "Regulation",
-                        labelStyle: TextStyle(fontSize: 13 * siz),
-                        filled: true,
-                        fillColor: palette.accent,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      items: regs
-                          .map((r) => DropdownMenuItem(
-                                value: r,
-                                child: Text(
-                                  "Reg $r",
-                                  style: TextStyle(fontSize: 13 * siz),
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (val) {
-                        selectedReg.value = val;
-                        selectedCodes.clear();
-                        updateFiltered();
-                      },
-                    );
-                  }),
-                  SizedBox(height: 10 * siz),
-
-                  // DEPARTMENT
-                  Obx(() {
-                    return DropdownButtonFormField<String>(
-                      value: selectedDept.value,
-                      decoration: InputDecoration(
-                        labelText: "Department",
-                        labelStyle: TextStyle(fontSize: 13 * siz),
-                        filled: true,
-                        fillColor: palette.accent,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      items: depts
-                          .map((d) => DropdownMenuItem(
-                                value: d['code'],
-                                child: Text(
-                                  d['label']!,
-                                  style: TextStyle(fontSize: 13 * siz),
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (val) {
-                        selectedDept.value = val;
-                        selectedCodes.clear();
-                        updateFiltered();
-                      },
-                    );
-                  }),
-                  SizedBox(height: 12 * siz),
-
-                  // SUBJECT LIST
-                  Expanded(
-                    child: Obx(() {
-                      if (selectedReg.value == null ||
-                          selectedDept.value == null) {
-                        return Center(
-                          child: Text(
-                            "Select regulation and department\nfor Semester $semester",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13 * siz,
-                              color: palette.black,
-                            ),
+        return bottomSheetSafeWrapper(
+          context: ctx,
+          s: siz,
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.9,
+            minChildSize: 0.6,
+            maxChildSize: 0.95,
+            builder: (_, scrollController) {
+              return Padding(
+                padding: EdgeInsets.fromLTRB(20 * siz, 16 * siz, 20 * siz, 20 * siz),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // HEADER
+                    Row(
+                      children: [
+                        Text(
+                          "Choose by Department",
+                          style: TextStyle(
+                            fontSize: 16 * siz,
+                            fontWeight: FontWeight.w700,
                           ),
-                        );
-                      }
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12 * siz),
 
-                      if (filteredSubjects.isEmpty) {
-                        return Center(
-                          child: Text(
-                            "No subjects mapped for this combination.",
-                            style: TextStyle(
-                              fontSize: 13 * siz,
-                              color: palette.black,
-                            ),
+                    // REGULATION
+                    Obx(() {
+                      return DropdownButtonFormField<String>(
+                        value: prefCtrl.selectedReg.value,
+                        style: TextStyle(fontSize: 14*siz, color: palette.black),
+                        decoration: InputDecoration(
+                          label: Text("Regulation", style: TextStyle(fontSize: 14*siz)),
+                          filled: true,
+                          fillColor: palette.accent,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                        );
-                      }
-
-                      final grouped =
-                          calcController.groupByCategory(filteredSubjects);
-
-                      return ListView(
-                        controller: scrollController,
-                        children: [
-                          section("Subjects", grouped['core'] ?? []),
-                          section("Professional Electives", grouped['pe'] ?? []),
-                          section("Open Electives", grouped['oe'] ?? []),
-                        ],
+                        ),
+                        items: regs
+                            .map((r) => DropdownMenuItem(
+                                  value: r,
+                                  child: Text("Reg $r"),
+                                ))
+                            .toList(),
+                        onChanged: (val) async {
+                          await prefCtrl.setReg(val); // 💾 save
+                          selectedCodes.clear();
+                          updateFiltered();
+                        },
                       );
                     }),
-                  ),
 
-                  SizedBox(height: 8 * siz),
+                    SizedBox(height: 10 * siz),
 
-                  // ADD BUTTON
-                  Obx(() {
-                    final enabled = selectedCodes.isNotEmpty;
-                    return SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: enabled
-                              ? palette.primary
-                              : palette.black.withAlpha(150),
-                          shape: RoundedRectangleBorder(
+                    // DEPARTMENT
+                    Obx(() {
+                      return DropdownButtonFormField<String>(
+                        value: prefCtrl.selectedDept.value,
+                        style: TextStyle(fontSize: 14*siz, color: palette.black),
+                        decoration: InputDecoration(
+                          label: Text("Department", style: TextStyle(fontSize: 12*siz)),
+                          filled: true,
+                          fillColor: palette.accent,
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 14 * siz),
                         ),
-                        onPressed: enabled
-                            ? () async {
-                                final toAdd = filteredSubjects
-                                    .where((s) =>
-                                        selectedCodes.contains(s.code))
-                                    .toList();
+                        items: depts
+                            .map((d) => DropdownMenuItem(
+                              value: d['code'],
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.65,
+                                ),
+                                child: Text(
+                                  d['label']!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: false,
+                                  style: TextStyle(fontSize: 13 * siz),
+                                ),
+                              )
+                            ))
+                            .toList(),
+                        onChanged: (val) async {
+                          await prefCtrl.setDept(val); // 💾 save
+                          selectedCodes.clear();
+                          updateFiltered();
+                        },
+                      );
+                    }),
 
-                                Navigator.of(ctx).pop();
+                    SizedBox(height: 12 * siz),
 
-                                for (final s in toAdd) {
-                                  await calcController.addSubjectFromTemplate(
-                                    s,
-                                    semester,
-                                  );
-                                }
+                    // SUBJECT LIST
+                    Expanded(
+                      child: Obx(() {
+                        if (prefCtrl.selectedReg.value == null ||
+                            prefCtrl.selectedDept.value == null) {
+                          return Center(
+                            child: Text(
+                              "Select regulation and department\nfor Semester $semester",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13 * siz,
+                                color: palette.black,
+                              ),
+                            ),
+                          );
+                        }
 
-                                await calcController.recalculateAll();
+                        if (filteredSubjects.isEmpty) {
+                          return Center(
+                            child: Text(
+                              "No subjects mapped for this combination.",
+                              style: TextStyle(
+                                fontSize: 13 * siz,
+                                color: palette.black,
+                              ),
+                            ),
+                          );
+                        }
 
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "Added ${toAdd.length} subject(s) to Sem $semester",
+                        final grouped =
+                            calcController.groupByCategory(filteredSubjects);
+
+                        return ListView(
+                          controller: scrollController,
+                          children: [
+                            section("Subjects", grouped['core'] ?? []),
+                            section("Professional Electives", grouped['pe'] ?? []),
+                            section("Open Electives", grouped['oe'] ?? []),
+                          ],
+                        );
+                      }),
+                    ),
+
+                    SizedBox(height: 8 * siz),
+
+                    // ADD BUTTON
+                    Obx(() {
+                      final enabled = selectedCodes.isNotEmpty;
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: enabled
+                                ? palette.primary
+                                : palette.black.withAlpha(150),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 14 * siz),
+                          ),
+                          onPressed: enabled
+                              ? () async {
+                                  final toAdd = filteredSubjects
+                                      .where((s) =>
+                                          selectedCodes.contains(s.code))
+                                      .toList();
+
+                                  Navigator.of(ctx).pop();
+
+                                  for (final s in toAdd) {
+                                    await calcController.addSubjectFromTemplate(
+                                      s,
+                                      semester,
+                                    );
+                                  }
+
+                                  await calcController.recalculateAll();
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "Added ${toAdd.length} subject(s) to Sem $semester",
+                                        ),
                                       ),
-                                    ),
-                                  );
+                                    );
+                                  }
                                 }
-                              }
-                            : null,
-                        child: Text(
-                          enabled
-                              ? "Add selected subjects"
-                              : "Select subjects to add",
-                          style: TextStyle(
-                            color: palette.accent,
-                            fontSize: 13 * siz,
+                              : null,
+                          child: Text(
+                            enabled
+                                ? "Add selected subjects"
+                                : "Select subjects to add",
+                            style: TextStyle(
+                              color: palette.accent,
+                              fontSize: 13 * siz,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            );
-          },
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          )
         );
       },
     );
@@ -1044,73 +1077,78 @@ class _CalculateCgpaScreenState extends State<CalculateCgpaScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: palette.bg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(20 * s, 16 * s, 20 * s, 20 * s),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    "Add subject to semester",
-                    style: TextStyle(
-                      fontSize: 16 * s,
-                      fontWeight: FontWeight.w700,
+        return bottomSheetSafeWrapper(
+          context: ctx,
+          s: s,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20 * s, 16 * s, 20 * s, 20 * s),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "Add subject to semester",
+                      style: TextStyle(
+                        fontSize: 16 * s,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12 * s),
+                ListTile(
+                  leading: const Icon(Icons.account_tree_outlined),
+                  title: Text(
+                    "Choose using department",
+                    style: TextStyle(fontSize: 16 * s),
                   ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(ctx).pop(),
+                  subtitle: Text(
+                    "Regulation • Department • Multi-select",
+                    style: TextStyle(fontSize: 12 * s),
                   ),
-                ],
-              ),
-              SizedBox(height: 12 * s),
-              ListTile(
-                leading: const Icon(Icons.account_tree_outlined),
-                title: Text(
-                  "Choose using department",
-                  style: TextStyle(fontSize: 16 * s),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _showDeptBasedSubjectPicker(context, semester);
+                  },
                 ),
-                subtitle: Text(
-                  "Regulation • Department • Multi-select",
-                  style: TextStyle(fontSize: 12 * s),
+                ListTile(
+                  leading: const Icon(Icons.list_alt_outlined),
+                  title: Text(
+                    "Choose from subject list",
+                    style: TextStyle(fontSize: 16 * s),
+                  ),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _showSubjectPickerBottomSheet(context, semester);
+                  },
                 ),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showDeptBasedSubjectPicker(context, semester);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.list_alt_outlined),
-                title: Text(
-                  "Choose from subject list",
-                  style: TextStyle(fontSize: 16 * s),
+                ListTile(
+                  leading: const Icon(Icons.add),
+                  title: Text(
+                    "Add new subject manually",
+                    style: TextStyle(fontSize: 16 * s),
+                  ),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _showAddSubjectDialog(context, semester);
+                  },
                 ),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showSubjectPickerBottomSheet(context, semester);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.add),
-                title: Text(
-                  "Add new subject manually",
-                  style: TextStyle(fontSize: 16 * s),
-                ),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showAddSubjectDialog(context, semester);
-                },
-              ),
-            ],
-          ),
+              ],
+            ),
+          )
         );
       },
     );
