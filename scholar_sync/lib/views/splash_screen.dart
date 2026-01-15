@@ -20,6 +20,18 @@ class SplashScreen extends GetView<SplashController> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Product of text
+                    const Text(
+                      "Product Of",
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.6,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8A8A8A),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
                     // Logo
                     Transform.scale(
                       scale: controller.scaleAnimation.value,
@@ -30,29 +42,15 @@ class SplashScreen extends GetView<SplashController> {
                           fit: BoxFit.contain,
                         ),
                       ),
+                    
+                    const SizedBox(height: 8),
 
-                    const SizedBox(height: 24),
-
-                    // Product of text
                     const Text(
-                      "PRESENT",
+                      "Plan - Innovate - Solves",
                       style: TextStyle(
-                        fontSize: 12,
-                        letterSpacing: 1.6,
+                        fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF8A8A8A),
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    const Text(
-                      "ScholarSync",
-                      style: TextStyle(
-                        fontSize: 14,
-                        letterSpacing: 2.0,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
                       ),
                     ),
                   ],
