@@ -1,1 +1,1 @@
-# HorizonScholar
+# ScholarSync
