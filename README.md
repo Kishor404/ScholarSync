@@ -8,7 +8,7 @@
 # ScholarSync  
 ### Your Smart Academic Companion
 
-ScholarSync is a **fully offline academic companion app** developed by **Reversant Technologies**, built specifically for college students to **track, analyze, and improve academic performance**—with **no ads, no internet dependency, and full privacy**.
+ScholarSync is a **fully offline academic companion app** developed by **Kishor404**, built specifically for college students to **track, analyze, and improve academic performance**—with **no ads, no internet dependency, and full privacy**.
 
 ---
 
@@ -126,8 +126,8 @@ All academic information remains **locally on the user's device**.
 
 ## Developed By
 
-**Reversant Technologies**  
-Where Innovation Solves Problems
+**Kishor404**  
+FullStack Developer
 
 ---
 
