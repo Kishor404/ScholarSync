@@ -20,23 +20,13 @@ class SplashScreen extends GetView<SplashController> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Product of text
-                    const Text(
-                      "Product Of",
-                      style: TextStyle(
-                        fontSize: 12,
-                        letterSpacing: 1.6,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF8A8A8A),
-                      ),
-                    ),
 
                     const SizedBox(height: 8),
                     // Logo
                     Transform.scale(
                       scale: controller.scaleAnimation.value,
                       child: Image.asset(
-                          'assets/Reversant/Logo/Reversant.png',
+                          'assets/logo.png',
                           width: 140,
                           height: 140,
                           fit: BoxFit.contain,

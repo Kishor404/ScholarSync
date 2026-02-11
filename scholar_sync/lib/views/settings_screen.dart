@@ -424,7 +424,7 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(height: 16 * s),
 
                 Text(
-                  "Built by Reversant Technologies",
+                  "Built by Kishor404",
                   style: TextStyle(
                     fontSize: isMobile ? 11 * s : 12 * s,
                     fontWeight: FontWeight.w500,
